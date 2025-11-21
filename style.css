@@ -1,0 +1,425 @@
+:root {
+    --bg-color: #0f172a;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-highlight: rgba(255, 255, 255, 0.2);
+    --primary-color: #6366f1;
+    /* Indigo */
+    --primary-glow: rgba(99, 102, 241, 0.5);
+    --accent-color: #22d3ee;
+    /* Cyan */
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --grid-line: #334155;
+    --grid-line-thick: #f8fafc;
+    --cell-hover: rgba(255, 255, 255, 0.1);
+    --cell-selected: rgba(99, 102, 241, 0.3);
+    --cell-related: rgba(99, 102, 241, 0.1);
+    --error-color: #f43f5e;
+    --success-color: #10b981;
+
+    --font-family: 'Outfit', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Background Blobs for ambience */
+.background-blobs {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+}
+
+.blob-1 {
+    top: -10%;
+    left: -10%;
+    width: 500px;
+    height: 500px;
+    background: var(--primary-color);
+    animation: float 20s infinite alternate;
+}
+
+.blob-2 {
+    bottom: -10%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: var(--accent-color);
+    animation: float 15s infinite alternate-reverse;
+}
+
+.blob-3 {
+    top: 40%;
+    left: 40%;
+    width: 300px;
+    height: 300px;
+    background: #a855f7;
+    /* Purple */
+    animation: float 18s infinite alternate;
+}
+
+@keyframes float {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(30px, 50px);
+    }
+}
+
+/* App Container */
+.app-container {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Header */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.game-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px var(--primary-glow);
+}
+
+.game-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.timer-container {
+    font-family: monospace;
+    font-size: 1.2rem;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.difficulty-selector select {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    color: var(--text-muted);
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+    font-family: var(--font-family);
+    cursor: pointer;
+    outline: none;
+}
+
+/* Grid */
+.game-board-container {
+    display: flex;
+    justify-content: center;
+}
+
+.sudoku-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    gap: 1px;
+    background-color: var(--grid-line);
+    border: 2px solid var(--grid-line-thick);
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.cell {
+    background-color: rgba(15, 23, 42, 0.8);
+    /* Darker cell bg */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    user-select: none;
+    color: var(--text-main);
+}
+
+/* Thicker borders for 3x3 subgrids */
+.cell:nth-child(3n) {
+    border-right: 2px solid var(--grid-line-thick);
+}
+
+.cell:nth-child(9n) {
+    border-right: none;
+    /* Handled by grid container border */
+}
+
+/* We need to handle bottom borders carefully. 
+   Since it's a grid with gap, the gap provides the lines. 
+   To make 3x3 distinct, we can use specific nth-child logic or just rely on the gap.
+   Actually, standard CSS Grid gap is uniform. 
+   Let's use a different approach for the thick lines: 
+   We can add margin to specific cells or use a nested grid approach. 
+   
+   Simpler approach: Use border on cells.
+*/
+
+.sudoku-grid {
+    gap: 0;
+    background-color: transparent;
+    border: 2px solid var(--text-muted);
+}
+
+.cell {
+    border: 1px solid var(--grid-line);
+    background-color: rgba(15, 23, 42, 0.6);
+}
+
+/* Thick borders */
+.cell:nth-child(3n) {
+    border-right: 2px solid var(--text-muted);
+}
+
+.cell:nth-child(9n) {
+    border-right: 1px solid var(--grid-line);
+    /* Reset */
+}
+
+/* Row borders - this is tricky with just nth-child on a flat list.
+   We will handle this by adding classes in JS or using complex nth-child formulas.
+   Let's use JS to add 'border-bottom-thick' and 'border-right-thick' classes for simplicity and robustness.
+*/
+.cell.border-right-thick {
+    border-right: 2px solid var(--text-muted);
+}
+
+.cell.border-bottom-thick {
+    border-bottom: 2px solid var(--text-muted);
+}
+
+.cell:hover {
+    background-color: var(--cell-hover);
+}
+
+.cell.selected {
+    background-color: var(--cell-selected);
+    border-color: var(--primary-color);
+}
+
+.cell.related {
+    background-color: var(--cell-related);
+}
+
+.cell.fixed {
+    color: var(--text-muted);
+    font-weight: 700;
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.cell.user-input {
+    color: var(--accent-color);
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+}
+
+.cell.error {
+    background-color: rgba(244, 63, 94, 0.2);
+    color: var(--error-color);
+}
+
+.cell.highlight-num {
+    background-color: rgba(34, 211, 238, 0.2);
+}
+
+/* Controls */
+.controls-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.numpad {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+}
+
+.num-btn,
+.action-btn {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    padding: 0.75rem;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-family);
+}
+
+.num-btn:hover,
+.action-btn:hover {
+    background: var(--glass-highlight);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.num-btn:active,
+.action-btn:active {
+    transform: translateY(0);
+}
+
+.game-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.primary-btn,
+.secondary-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-family);
+    transition: all 0.2s;
+    border: none;
+}
+
+.primary-btn {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.primary-btn:hover {
+    background: #4f46e5;
+    box-shadow: 0 0 25px var(--primary-glow);
+}
+
+.secondary-btn {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+}
+
+.secondary-btn:hover {
+    background: var(--glass-highlight);
+    border-color: var(--text-main);
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.modal-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal {
+    background: #1e293b;
+    padding: 2rem;
+    border-radius: 24px;
+    text-align: center;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    transform: scale(1);
+    transition: transform 0.3s;
+}
+
+.modal-overlay.hidden .modal {
+    transform: scale(0.9);
+}
+
+.modal h2 {
+    margin-bottom: 1rem;
+    color: var(--text-main);
+}
+
+.modal p {
+    margin-bottom: 1.5rem;
+    color: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+    .app-container {
+        padding: 1rem;
+        border-radius: 0;
+        min-height: 100vh;
+        border: none;
+    }
+
+    .cell {
+        font-size: 1.2rem;
+    }
+
+    .numpad {
+        gap: 0.25rem;
+    }
+
+    .num-btn {
+        padding: 0.5rem;
+    }
+}
